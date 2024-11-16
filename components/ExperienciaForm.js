@@ -1,11 +1,13 @@
 // components/ExperienciaForm.js
 import { useState, useEffect } from 'react';
 
-export default function ExperienciaForm({ onSubmit }) {
+export default function ExperienciaForm({ onSubmit, onEditExperiencia, experiencia }) {
+  const [id, setId] = useState('');
   const [description, setDescription] = useState('');
   const [owner, setOwner] = useState('');
   const [participants, setParticipants] = useState([]);
   const [users, setUsers] = useState([]);
+  const [editando, setEditandp] = useState(false);
   const [loadingUsers, setLoadingUsers] = useState(true);
 
   // Fetch de los usuarios disponibles desde la API
@@ -24,21 +26,51 @@ export default function ExperienciaForm({ onSubmit }) {
     fetchUsers();
   }, []);
 
+  useEffect(() => {
+    if (experiencia) {
+      setId(experiencia._id || '');
+      setDescription(experiencia.description || '');  // Aquí se cargan los datos en modo edición
+      setOwner(experiencia.owner || '');
+      setParticipants(experiencia.participants || []);
+      setEditandp(true);
+    } else {
+      setDescription('');
+      setOwner('');
+      setParticipants([]);
+    }
+  }, [experiencia]);
+
   // Manejo del envío del formulario
   const handleSubmit = (e) => {
     e.preventDefault();
-
-    // Verificación de que al menos la descripción y el dueño estén completos
-    if (description && owner) {
-      const newExperiencia = {
+    if(editando==false){
+        // Verificación de que al menos la descripción y el dueño estén completos
+        if (description && owner) {
+        const newExperiencia = {
         description,
         owner,
         participants,
-      };
-      onSubmit(newExperiencia); // Llama a onSubmit para añadir experiencia
+        };
+        onSubmit(newExperiencia); // Llama a onSubmit para añadir experiencia
     } else {
       alert('Debes completar todos los campos');
     }
+  } else {
+    if (description && owner) {
+      const newExperiencia = {
+      owner,
+      participants,
+      description,
+      };
+      console.log('onEditExperiencia:', onEditExperiencia);
+      console.log('experiencia:',JSON.stringify(newExperiencia, null, 2));
+      console.log('id', id);
+      onEditExperiencia(id, newExperiencia);
+      setEditandp(false);
+  } else {
+    alert('Debes completar todos los campos');
+  }
+  }
   };
 
   if (loadingUsers) return <p>Cargando usuarios...</p>;
